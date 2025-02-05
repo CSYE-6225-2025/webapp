@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
-const { sq } = require('./config/db'); // Sequelize instance
+const { sequelize } = require('./config/db'); // Sequelize instance
 const healthz = require("./routes/healthz");
 
 
-sq.sync();
+sequelize.sync();
 
 app.use("/healthz", healthz);
 app.use("*", (_, res) => {

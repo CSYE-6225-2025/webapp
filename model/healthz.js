@@ -1,7 +1,7 @@
 const { literal, DataTypes } = require("sequelize");
-const {sq} = require('../config/db');
+const {sequelize} = require('../config/db');
 
-const HealthzCheck = sq.define(
+const HealthzCheck = sequelize.define(
     "HealthzCheck",
     {
         check_id: {

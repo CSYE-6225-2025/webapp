@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-require("dotenv").config();
+require("dotenv").config({ path: process.env.NODE_ENV === "test" ? ".env.test.local" : ".env" });
 
 const MYSQL_DB = process.env.MYSQL_DB;
 const MYSQL_USER = process.env.MYSQL_USER;
@@ -30,4 +30,4 @@ const testDbConnection = async () => {
     }
 };
 
-module.exports = { sq: sequelize, testDbConnection };
+module.exports = {sequelize, testDbConnection };
