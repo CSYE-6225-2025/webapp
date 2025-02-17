@@ -36,12 +36,12 @@ jobs:
 
       - name: Create .env file from GitHub Secrets
         run: |
-          echo "export PORT=${{ secrets.PORT }}" >> .env
-          echo "export MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env
-          echo "export MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
-          echo "export MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
-          echo "export MYSQL_HOST=127.0.0.1" >> .env
-          echo "export MYSQL_PORT=3306" >> .env
+          echo "PORT=${{ secrets.PORT }}" >> .env
+          echo "MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          echo "MYSQL_HOST=127.0.0.1" >> .env
+          echo "MYSQL_PORT=3306" >> .env
 
       - name: Wait for MySQL to be ready
         run: |
