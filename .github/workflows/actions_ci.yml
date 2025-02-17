@@ -12,7 +12,7 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0.41
+        image: mysql:latest
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
@@ -23,7 +23,7 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v2
 
       - name: Set up Node.js
@@ -40,8 +40,8 @@ jobs:
           echo "MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
-          echo "MYSQL_HOST=127.0.0.1" >> .env
-          echo "MYSQL_PORT=3306" >> .env
+          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
+          echo "MYSQL_PORT=${{ secrets.PORT }}" >> .env
 
       - name: Wait for MySQL to be ready
         run: |
@@ -50,5 +50,5 @@ jobs:
             sleep 2
           done
 
-      - name: Run npm tests
+      - name: Run tests
         run: npm test
