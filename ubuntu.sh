@@ -33,6 +33,9 @@ sudo groupadd csye6225_group
 #Create a new user of the application.
 sudo useradd -m -s /bin/bash csye6225_user
 
+# Change ownership of the folder to the new user and group
+sudo chown -R csye6225_user:csye6225_group /opt/csye6225/webapp-copy
+
 #Set the permissions of the folder and artifacts in the directory.
 chmod -R 744 /opt/csye6225/webapp-copy #setting read, write and execute permission for owner and only read for group users and others
 

@@ -1,0 +1,54 @@
+name: MySQL Setup and NPM Tests
+
+on:
+
+  pull_request_target:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0.41
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.12.0'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "export PORT=${{ secrets.PORT }}" >> .env
+          echo "export MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env
+          echo "export MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+          echo "export MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          echo "export MYSQL_HOST=127.0.0.1" >> .env
+          echo "export MYSQL_PORT=3306" >> .env
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysqladmin ping -h"127.0.0.1" --silent; do
+            echo "Waiting for database connection..."
+            sleep 2
+          done
+
+      - name: Run npm tests
+        run: npm test
