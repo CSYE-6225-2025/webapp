@@ -43,6 +43,10 @@ jobs:
           echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
           echo "MYSQL_PORT=${{ secrets.PORT }}" >> .env
 
+      - name: Debug .env file
+        run: cat .env
+
+
       - name: Wait for MySQL to be ready
         run: |
           until mysqladmin ping -h"127.0.0.1" --silent; do
