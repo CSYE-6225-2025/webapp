@@ -44,7 +44,7 @@ jobs:
           echo "MYSQL_PORT=${{ secrets.PORT }}" >> .env.test.local
 
       - name: Debug .env file
-        run: cat .env
+        run: cat .env.test.local
 
 
       - name: Wait for MySQL to be ready
