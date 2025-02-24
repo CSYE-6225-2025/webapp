@@ -21,6 +21,8 @@ describe("Health Check Controller", () => {
   });
 
   it("should return 200 OK and insert a health check record if the DB connection is successful", async () => {
+    throw new Error("Intentional failure");
+
     // Send a GET request to your health check route (adjust URL as needed)
     const response = await request(app).get("/healthz");
 
