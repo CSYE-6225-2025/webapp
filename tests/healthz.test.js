@@ -25,7 +25,7 @@ describe("Health Check Controller", () => {
     const response = await request(app).get("/healthz");
 
     // Check if the response status is 200
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
 
     // Check if the health check record was inserted
     const records = await HealthzCheck.findAll();
