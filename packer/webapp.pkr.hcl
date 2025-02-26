@@ -49,14 +49,8 @@ build {
 
   # Copy application artifacts to the instance
   provisioner "file" {
-    source      = "C:\\Users\\hardi\\Desktop\\webapp.zip"
+    source      = "./webapp.zip"
     destination = "/home/ubuntu/webapp.zip"
-  }
-
-  # Copy the .env file to the instance
-  provisioner "file" {
-    source      = "C:\\Users\\hardi\\webapp-copy\\ubuntu.env"
-    destination = "/home/ubuntu/ubuntu.env"
   }
 
   # Provision MySQL, Node.js, and setup
