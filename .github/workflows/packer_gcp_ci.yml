@@ -15,7 +15,7 @@ jobs:
         image: mysql:latest
         env:
           MYSQL_ROOT_PASSWORD: "${{secrets.MYSQL_ROOT_PASSWORD}}" 
-          MYSQL_DATABASE: "${{secrets.MYSQL_DATABASE}}"             
+          MYSQL_DB: "${{secrets.MYSQL_DB}}"             
           MYSQL_USER: "${{secrets.MYSQL_USER}}"               
           MYSQL_PASSWORD: "${{secrets.MYSQL_PASSWORD}}"     
         ports:
@@ -34,8 +34,8 @@ jobs:
           echo "hostname=${{secrets.MYSQL_HOST}}" >> .env.test.local
           echo "username=${{secrets.MYSQL_USER}}" >> .env.test.local
           echo "password=${{secrets.MYSQL_PASSWORD}}" >> .env.test.local 
-          echo "database=${{secrets.MYSQL_DATABASE}}" >> .env.test.local        
-          echo "port=${{secrets.PORT}}" >> .env.test.local
+          echo "database=${{secrets.MYSQL_DB}}" >> .env.test.local        
+          echo "MYSQL_PORT=${{secrets.MYSQL_PORT}}" >> .env.test.local
       
       - name: Debug .env file
         run: cat .env.test.local
@@ -88,7 +88,7 @@ jobs:
               GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
               GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
               MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-              MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+              MYSQL_DB: ${{ secrets.MYSQL_DB }}
 
         run: |
             echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-key.json
@@ -99,6 +99,6 @@ jobs:
             packer build \
               -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
               -var "mysql_root_password=${{ secrets.MYSQL_ROOT_PASSWORD }}" \
-              -var "mysql_database=${{ secrets.MYSQL_DATABASE }}" \
+              -var "mysql_db=${{ secrets.MYSQL_DB }}" \
               webapp-gcp.pkr.hcl
 
