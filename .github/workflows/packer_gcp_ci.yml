@@ -75,6 +75,10 @@ jobs:
           gcloud auth list
           gcloud projects list | grep ${{ secrets.GCP_PROJECT_ID }}
 
+      - name: Install Packer Plugin for Google Compute
+        run: packer plugin install github.com/hashicorp/googlecompute
+
+        
       # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Change directory & Initialize packer to create EC2 instance
         run: |
