@@ -109,7 +109,9 @@ jobs:
 
         run: |
             echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-key.json
-            gcloud auth activate-service-account --key-file=gcp-key.json
+            export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/gcp-key.json"  # Set the correct path here
+
+            gcloud auth activate-service-account --key-file=GOOGLE_APPLICATION_CREDENTIALS
             gcloud config set project "$GCP_PROJECT_ID"
 
             cd packer
