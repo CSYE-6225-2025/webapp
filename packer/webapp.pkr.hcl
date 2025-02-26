@@ -29,6 +29,11 @@ variable "port" {
   default = "3306"
 }
 
+variable "ami_users" {
+  type    = list(string)
+  default = ["123456789012"] # Replace with your demo AWS Account ID(s)
+}
+
 source "amazon-ebs" "webapp_custom_image" {
   region        = var.aws_region
   profile       = "webapp_ec2"
@@ -39,6 +44,9 @@ source "amazon-ebs" "webapp_custom_image" {
   # Instance Configuration
   ssh_username                = "ubuntu"
   associate_public_ip_address = true
+
+  #share image with the demo
+  ami_users = var.ami_users
 }
 
 build {
