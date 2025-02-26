@@ -79,7 +79,7 @@ jobs:
       - name: Change directory & Initialize packer to create EC2 instance
         run: |
           cd packer
-          packer init .
+          packer init webapp-gcp.pkr.hcl
       
       - name: Validate Packer
         run: |
