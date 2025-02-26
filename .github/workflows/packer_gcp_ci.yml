@@ -69,6 +69,15 @@ jobs:
           echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > gcp-key.json
           gcloud auth activate-service-account --key-file=gcp-key.json
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+
+      
+    # Step 2: Set up Google Cloud SDK and authenticate with service account
+      - name: Set up Google Cloud credentials
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        run: |
+          echo "${GOOGLE_APPLICATION_CREDENTIALS}" > ${HOME}/gcp-key.json
+          gcloud auth activate-service-account --key-file=${HOME}/gcp-key.json
       
       - name: Validate GCP Credentials
         run: |
@@ -78,7 +87,7 @@ jobs:
       - name: Install Packer Plugin for Google Compute
         run: packer plugin install github.com/hashicorp/googlecompute
 
-        
+
       # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Change directory & Initialize packer to create EC2 instance
         run: |
