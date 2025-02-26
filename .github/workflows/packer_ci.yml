@@ -1,0 +1,84 @@
+name: Deploy Web App on EC2 (AWS) and Run Integration Tests
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  deploy_and_test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: "${{secrets.DB_ROOT_PASSWORD}}" 
+          MYSQL_DATABASE: "${{secrets.MYSQL_DATABASE}}"             
+          MYSQL_USER: "${{secrets.MYSQL_USER}}"               
+          MYSQL_PASSWORD: "${{secrets.MYSQL_PASSWORD}}"     
+        ports:
+          - 3306:3306
+
+    steps:
+    # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment file
+        run: |
+          echo "hostname=${{secrets.MYSQL_HOST}}" >> .env.test.local
+          echo "username=${{secrets.MYSQL_USER}}" >> .env.test.local
+          echo "password=${{secrets.MYSQL_PASSWORD}}" >> .env.test.local 
+          echo "database=${{secrets.MYSQL_DATABASE}}" >> .env.test.local        
+          echo "port=${{secrets.PORT}}" >> .env.test.local
+      
+      - name: Debug .env file
+        run: cat .env.test.local
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Wait for MySQL to be ready
+        run: sleep 20
+      
+      - name: Run tests
+        run: npm test
+        continue-on-error: false
+
+      - name: Make zip
+        run: zip -r webapp.zip .
+
+    # Step 2: Set up AWS CLI
+      - name: Set up AWS CLI
+        run: |
+          aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          aws configure set region us-east-1
+
+      # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
+      - name: Change directory & Initialize packer to create EC2 instance
+        run: |
+          cd packer
+          packer init .
+      
+        -name: Validate Packer
+        run: |
+          packer validate .
+
+      # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
+      - name: Run Packer to create EC2 instance
+        run: |
+          packer build \
+          -var "aws_region=${{secrets.AWS_REGION}}" \
+          -var "mysql_host=${{secrets.MYSQL_HOST }}" \
+          -var "mysql_user=${{secrets.MYSQL_USER }}" \
+          -var "mysql_password=${{secrets.MYSQL_PASSWORD}}" \
+          -var "mysql_root_password=${{secrets.MYSQL_ROOT_PASSWORD}}" \
+          -var "mysql_database=${{secrets.MYSQL_DATABASE}}" \
+          -var "port=${{secrets.PORT}}" \
+          webapp.pkr.hcl
