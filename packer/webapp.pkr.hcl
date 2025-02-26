@@ -71,9 +71,6 @@ build {
       "ls -l /home/ubuntu/webapp.zip",
       "sudo chmod 644 /home/ubuntu/webapp.zip",
 
-      "ls -l /home/ubuntu/ubuntu.env",
-      "sudo chmod 644 /home/ubuntu/ubuntu.env", # Ensure permissions for the env file
-
       # Change authentication method in MySQL
       "sudo mysql -u root -p'${var.mysql_root_password}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${var.mysql_root_password}';\"",
 
@@ -98,11 +95,8 @@ build {
       # Navigate to the webapp directory
       "cd /opt/csye6225/webapp && sudo npm install", # Install dependencies
 
-
       # Create systemd service
       "sudo bash -c 'echo \"[Unit]\" > /etc/systemd/system/csye6225.service && echo \"Description=CSYE 6225 App\" >> /etc/systemd/system/csye6225.service && echo \"ConditionPathExists=/opt/application.properties\" >> /etc/systemd/system/csye6225.service && echo \"After=network.target\" >> /etc/systemd/system/csye6225.service && echo \"\" >> /etc/systemd/system/csye6225.service && echo \"[Service]\" >> /etc/systemd/system/csye6225.service && echo \"Type=simple\" >> /etc/systemd/system/csye6225.service && echo \"User=csye6225\" >> /etc/systemd/system/csye6225.service && echo \"Group=csye6225\" >> /etc/systemd/system/csye6225.service && echo \"WorkingDirectory=/opt/app\" >> /etc/systemd/system/csye6225.service && echo \"ExecStart=/opt/app/healthcheck\" >> /etc/systemd/system/csye6225.service && echo \"Restart=always\" >> /etc/systemd/system/csye6225.service && echo \"RestartSec=3\" >> /etc/systemd/system/csye6225.service && echo \"StandardOutput=syslog\" >> /etc/systemd/system/csye6225.service && echo \"StandardError=syslog\" >> /etc/systemd/system/csye6225.service && echo \"SyslogIdentifier=csye6225\" >> /etc/systemd/system/csye6225.service && echo \"\" >> /etc/systemd/system/csye6225.service && echo \"[Install]\" >> /etc/systemd/system/csye6225.service && echo \"WantedBy=multi-user.target\" >> /etc/systemd/system/csye6225.service'",
-
-
 
       # Reload systemd to recognize the new service
       "sudo systemctl daemon-reload",
