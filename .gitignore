@@ -79,6 +79,11 @@ web_modules/
 .env.production.local
 .env.local
 ubuntu.env
+*.pkrvars.hcl
+packer/*.json
+*.pem
+
+.vscode
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
