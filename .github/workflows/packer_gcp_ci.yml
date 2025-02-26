@@ -84,7 +84,7 @@ jobs:
       - name: Validate Packer
         run: |
           cd packer
-          packer validate .
+          packer validate webapp-gcp.pkr.hcl
 
       # Step 5: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Run Packer to create EC2 instance
