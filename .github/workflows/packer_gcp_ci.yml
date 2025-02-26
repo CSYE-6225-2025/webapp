@@ -14,35 +14,41 @@ jobs:
       mysql:
         image: mysql:latest
         env:
-          MYSQL_ROOT_PASSWORD: "${{secrets.MYSQL_ROOT_PASSWORD}}" 
-          MYSQL_DB: "${{secrets.MYSQL_DB}}"             
-          MYSQL_USER: "${{secrets.MYSQL_USER}}"               
-          MYSQL_PASSWORD: "${{secrets.MYSQL_PASSWORD}}"     
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
 
     steps:
     # Step 1: Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up environment file
-        run: |
-          echo "hostname=${{secrets.MYSQL_HOST}}" >> .env.test.local
-          echo "username=${{secrets.MYSQL_USER}}" >> .env.test.local
-          echo "password=${{secrets.MYSQL_PASSWORD}}" >> .env.test.local 
-          echo "database=${{secrets.MYSQL_DB}}" >> .env.test.local        
-          echo "MYSQL_PORT=${{secrets.MYSQL_PORT}}" >> .env.test.local
       
-      - name: Debug .env file
-        run: cat .env.test.local
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.12.0'
 
       - name: Install dependencies
         run: npm install
 
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "PORT=${{ secrets.PORT }}" >> .env.test.local
+          echo "MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env.test.local
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.test.local
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.test.local
+          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.test.local
+          echo "MYSQL_PORT=${{ secrets.PORT }}" >> .env.test.local
+
+      - name: Debug .env file
+        run: cat .env.test.local
+      
       - name: Wait for MySQL to be ready
         run: |
           until mysqladmin ping -h"127.0.0.1" --silent; do
@@ -82,13 +88,13 @@ jobs:
           cd packer
           packer validate .
 
-      # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
+      # Step 5: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Run Packer to create EC2 instance
         env:
               GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
               GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
               MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-              MYSQL_DB: ${{ secrets.MYSQL_DB }}
+              MYSQL_DB: ${{ secrets.MYSQL_DATABASE }}
 
         run: |
             echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-key.json
@@ -99,6 +105,6 @@ jobs:
             packer build \
               -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
               -var "mysql_root_password=${{ secrets.MYSQL_ROOT_PASSWORD }}" \
-              -var "mysql_db=${{ secrets.MYSQL_DB }}" \
+              -var "mysql_db=${{ secrets.MYSQL_DATABASE }}" \
               webapp-gcp.pkr.hcl
 
