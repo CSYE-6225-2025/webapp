@@ -22,13 +22,10 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-
     steps:
-    # Step 1: Checkout the repository
-
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v2
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -48,14 +45,15 @@ jobs:
 
       - name: Debug .env file
         run: cat .env.test.local
-      
+
+
       - name: Wait for MySQL to be ready
         run: |
           until mysqladmin ping -h"127.0.0.1" --silent; do
             echo "Waiting for database connection..."
             sleep 2
           done
-      
+
       - name: Run tests
         run: npm test
 
