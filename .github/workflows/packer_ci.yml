@@ -45,7 +45,7 @@ jobs:
 
       - name: Wait for MySQL to be ready
         run: sleep 20
-        
+
       - name: Make zip
         run: zip -r webapp.zip .
 
@@ -64,11 +64,13 @@ jobs:
       
       - name: Validate Packer
         run: |
+          cd packer
           packer validate .
 
       # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Run Packer to create EC2 instance
         run: |
+          cd packer
           packer build \
           -var "aws_region=${{secrets.AWS_REGION}}" \
           -var "mysql_host=${{secrets.MYSQL_HOST }}" \
