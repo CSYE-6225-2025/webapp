@@ -60,7 +60,8 @@ jobs:
           aws configure set region us-east-1
       
       - name: Validate AWS Credentials
-          run: aws sts get-caller-identity
+        run: |
+          aws sts get-caller-identity
 
       # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Change directory & Initialize packer to create EC2 instance
