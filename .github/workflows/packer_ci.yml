@@ -48,6 +48,9 @@ jobs:
 
       - name: Make zip
         run: zip -r webapp.zip .
+      
+      - name: list file after creating zip
+        run: ls -1h
 
     # Step 2: Set up AWS CLI
       - name: Set up AWS CLI
