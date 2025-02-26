@@ -24,7 +24,7 @@ variable "mysql_root_password" {
   default     = "default"
 }
 
-variable "mysql_database" {
+variable "mysql_db" {
   default = "csye6225"
 }
 
@@ -52,14 +52,8 @@ build {
 
   # Copy application artifacts to the instance
   provisioner "file" {
-    source      = "C:\\Users\\hardi\\Desktop\\webapp.zip"
+    source      = "../webapp.zip"
     destination = "/home/ubuntu/webapp.zip"
-  }
-
-  # Copy the .env file to the instance
-  provisioner "file" {
-    source      = "C:\\Users\\hardi\\webapp-copy\\ubuntu.env"
-    destination = "/home/ubuntu/ubuntu.env"
   }
 
   # Provision MySQL, Node.js, and setup
@@ -79,14 +73,11 @@ build {
       "ls -l /home/ubuntu/webapp.zip",
       "sudo chmod 644 /home/ubuntu/webapp.zip",
 
-      "ls -l /home/ubuntu/ubuntu.env",
-      "sudo chmod 644 /home/ubuntu/ubuntu.env", # Ensure permissions for the env file
-
       # Change authentication method in MySQL
       "sudo mysql -u root -p'${var.mysql_root_password}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${var.mysql_root_password}';\"",
 
       # Create the database in the RDBMS
-      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"CREATE DATABASE ${var.mysql_database};\"",
+      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"CREATE DATABASE ${var.mysql_db};\"",
 
       # making csye6225
       "sudo mkdir /opt/csye6225/",
