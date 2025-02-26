@@ -49,7 +49,7 @@ build {
 
   # Copy application artifacts to the instance
   provisioner "file" {
-    source      = "./webapp.zip"
+    source      = "../webapp.zip"
     destination = "/home/ubuntu/webapp.zip"
   }
 
