@@ -83,7 +83,7 @@ build {
       "sudo mkdir /opt/csye6225/",
 
       # Unzip the application files
-      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/",
+      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/webapp",
 
       # Create the user and group
       "sudo groupadd csye6225",
