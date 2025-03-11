@@ -14,10 +14,10 @@ jobs:
       mysql:
         image: mysql:latest
         env:
-          MYSQL_ROOT_PASSWORD: 0308
-          MYSQL_DATABASE: csye6225
-          MYSQL_USER: git_user
-          MYSQL_PASSWORD: 0308
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -36,13 +36,12 @@ jobs:
 
       - name: Create .env file from GitHub Secrets
         run: |
-          echo "PORT=8080" >> .env.test.local
-          echo "MYSQL_DB=csye6225" >> .env.test.local
-          echo "username=root" >> .env.test.local
-          echo "MYSQL_PASSWORD=0308" >> .env.test.local
-          echo "MYSQL_HOST=127.0.0.1" >> .env.test.local
-          echo "MYSQL_PORT=8080" >> .env.test.local
-          echo "MYSQL_HOST=localhost" >> .env.test.local
+          echo "PORT=${{ secrets.PORT }}" >> .env.test.local
+          echo "MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env.test.local
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.test.local
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.test.local
+          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.test.local
+          echo "MYSQL_PORT=${{ secrets.PORT }}" >> .env.test.local
 
 
       - name: Debug .env file
@@ -58,9 +57,9 @@ jobs:
     
       - name: Create git_user in MySQL
         run: |
-          mysql -h172.18.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS 'git_user'@'%' IDENTIFIED BY '0308';"
-          mysql -h172.18.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON *.* TO 'git_user'@'%';"
-          mysql -h172.18.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "FLUSH PRIVILEGES;"
+          mysql -h127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS 'git_user'@'%' IDENTIFIED BY '0308';"
+          mysql -h127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON *.* TO 'git_user'@'%';"
+          mysql -h127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "FLUSH PRIVILEGES;"
 
       - name: Run tests
         run: npm test
