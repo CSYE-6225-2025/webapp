@@ -16,7 +16,7 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: 0308
           MYSQL_DATABASE: csye6225
-          MYSQL_USER: git_user
+          MYSQL_USER: root
           MYSQL_PASSWORD: 0308
         ports:
           - 3306:3306
@@ -38,7 +38,7 @@ jobs:
         run: |
           echo "PORT=8080" >> .env.test.local
           echo "MYSQL_DB=csye6225" >> .env.test.local
-          echo "MYSQL_USER=git_user" >> .env.test.local
+          echo "MYSQL_USER=root" >> .env.test.local
           echo "MYSQL_PASSWORD=0308" >> .env.test.local
           echo "MYSQL_HOST=127.0.0.1" >> .env.test.local
           echo "MYSQL_PORT=8080" >> .env.test.local
