@@ -24,11 +24,6 @@ jobs:
           packer --version
           which packer
 
-      - name: Initialize Packer Plugins
-        run: |
-          echo "Initializing Packer plugins for source.pkr.hcl"
-          packer init -upgrade packer/
-
       - name: Install gcloud for packer
         run: "packer plugins install github.com/hashicorp/googlecompute"
       
