@@ -2,7 +2,7 @@ name: MySQL Setup and NPM Tests
 
 on:
 
-  pull_request_target:
+  pull_request:
     branches:
       - main
 
@@ -14,10 +14,10 @@ jobs:
       mysql:
         image: mysql:latest
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: 0308
+          MYSQL_DATABASE: csye6225
+          MYSQL_USER: git_user
+          MYSQL_PASSWORD: 0308
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -36,12 +36,12 @@ jobs:
 
       - name: Create .env file from GitHub Secrets
         run: |
-          echo "PORT=${{ secrets.PORT }}" >> .env.test.local
-          echo "MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env.test.local
-          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.test.local
-          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.test.local
-          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.test.local
-          echo "MYSQL_PORT=${{ secrets.PORT }}" >> .env.test.local
+          echo "PORT=8080" >> .env.test.local
+          echo "MYSQL_DB=csye6225" >> .env.test.local
+          echo "MYSQL_USER=git_user" >> .env.test.local
+          echo "MYSQL_PASSWORD=0308" >> .env.test.local
+          echo "MYSQL_HOST=127.0.0.1" >> .env.test.local
+          echo "MYSQL_PORT=8080" >> .env.test.local
 
       - name: Debug .env file
         run: cat .env.test.local
@@ -56,3 +56,27 @@ jobs:
 
       - name: Run tests
         run: npm test
+        continue-on-error: false 
+    
+      - name: Install gcloud for packer
+        run: "packer plugins install github.com/hashicorp/googlecompute"
+      
+      - name: Change directory & Initialize packer to create EC2 instance
+        run: |
+          cd packer
+          packer init webapp.pkr.hcl
+          packer init webapp-gcp.pkr.hcl
+      
+      - name: Format Packer
+        run: |
+          cd packer
+          packer fmt webapp.pkr.hcl
+          packer fmt webapp-gcp.pkr.hcl
+      
+      - name: Validate Packer
+        run: |
+          cd packer
+          packer validate webapp.pkr.hcl
+          packer validate webapp-gcp.pkr.hcl
+      
+
