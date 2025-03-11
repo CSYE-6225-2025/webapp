@@ -16,7 +16,7 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: 0308
           MYSQL_DATABASE: csye6225
-          MYSQL_USER: root
+          MYSQL_USER: git_user
           MYSQL_PASSWORD: 0308
         ports:
           - 3306:3306
@@ -38,7 +38,7 @@ jobs:
         run: |
           echo "PORT=8080" >> .env.test.local
           echo "MYSQL_DB=csye6225" >> .env.test.local
-          echo "MYSQL_USER=root" >> .env.test.local
+          echo "MYSQL_USER=git_user" >> .env.test.local
           echo "MYSQL_PASSWORD=0308" >> .env.test.local
           echo "MYSQL_HOST=127.0.0.1" >> .env.test.local
           echo "MYSQL_PORT=8080" >> .env.test.local
@@ -53,6 +53,12 @@ jobs:
             echo "Waiting for database connection..."
             sleep 2
           done
+    
+      - name: Create git_user in MySQL
+        run: |
+          mysql -h127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS 'git_user'@'%' IDENTIFIED BY '0308';"
+          mysql -h127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON *.* TO 'git_user'@'%';"
+          mysql -h127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD -e "FLUSH PRIVILEGES;"
 
       - name: Run tests
         run: npm test
