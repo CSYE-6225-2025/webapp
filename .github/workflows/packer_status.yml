@@ -23,6 +23,9 @@ jobs:
         run: |
           packer --version
           which packer
+      
+      - name: Make zip
+        run: zip -r webapp.zip . -x ".git/*"
 
       - name: Install gcloud for packer
         run: "packer plugins install github.com/hashicorp/googlecompute"
