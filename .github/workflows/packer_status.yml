@@ -1,0 +1,49 @@
+name: Packer Status Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer:
+    name: Packer Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          packer_version: 'latest'
+
+      - name: Verify Packer Installation
+        run: |
+          packer --version
+          which packer
+      
+      - name: Make zip
+        run: zip -r webapp.zip . -x ".git/*"
+
+      - name: Install gcloud for packer
+        run: "packer plugins install github.com/hashicorp/googlecompute"
+      
+      - name: Change directory & Initialize packer to create EC2 instance
+        run: |
+          cd packer
+          packer init webapp.pkr.hcl
+          packer init webapp-gcp.pkr.hcl
+      
+      - name: Format Packer
+        run: |
+          cd packer
+          packer fmt -check -recursive webapp.pkr.hcl
+          packer fmt -check -recursive webapp-gcp.pkr.hcl
+      
+      - name: Validate Packer
+        run: |
+          cd packer
+          packer validate webapp.pkr.hcl
+          packer validate webapp-gcp.pkr.hcl
