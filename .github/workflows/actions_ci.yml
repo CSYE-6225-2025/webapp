@@ -42,6 +42,8 @@ jobs:
           echo "MYSQL_PASSWORD=0308" >> .env.test.local
           echo "MYSQL_HOST=127.0.0.1" >> .env.test.local
           echo "MYSQL_PORT=8080" >> .env.test.local
+          echo "MYSQL_HOST=localhost" >> .env.test.local
+
 
       - name: Debug .env file
         run: cat .env.test.local
