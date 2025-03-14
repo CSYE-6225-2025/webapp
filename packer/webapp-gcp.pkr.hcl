@@ -75,7 +75,8 @@ build {
 
       # Change authentication method in MySQL
       "sudo mysql -u root -p'${var.mysql_root_password}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${var.mysql_root_password}';\"",
-      "sudo mysql -u root -p'${var.mysql_root_password}' -e "CREATE USER 'git_user'@'%' IDENTIFIED BY '0308'; GRANT ALL PRIVILEGES ON *.* TO 'git_user'@'%'; FLUSH PRIVILEGES;"",
+      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"CREATE USER 'git_user'@'%' IDENTIFIED BY '0308';\"",
+      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"GRANT ALL PRIVILEGES ON *.* TO 'git_user'@'%';\"",
 
       # Create the database in the RDBMS
       "sudo mysql -u root -p'${var.mysql_root_password}' -e \"CREATE DATABASE ${var.mysql_db};\"",
