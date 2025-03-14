@@ -1,4 +1,4 @@
-packer {
+          packer {
   required_plugins {
     amazon-ebs = {
       source  = "github.com/hashicorp/amazon"
