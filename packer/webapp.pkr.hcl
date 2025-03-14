@@ -1,4 +1,4 @@
-          packer {
+packer {
   required_plugins {
     amazon-ebs = {
       source  = "github.com/hashicorp/amazon"
@@ -35,7 +35,7 @@ variable "ami_users" {
 }
 
 source "amazon-ebs" "webapp_custom_image" {
-  region        = var.aws_region
+  region        = var.aws_region_1
   profile       = "webapp_ec2"
   ami_name      = "custom-aws-webapp-{{timestamp}}"
   instance_type = "t2.micro"
