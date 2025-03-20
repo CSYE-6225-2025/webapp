@@ -57,8 +57,8 @@ build {
 
   # Copy application artifacts to the instance
   provisioner "file" {
-    source      = "C:\\Users\\hardi\\Desktop\\webapp.zip"
-    destination = "/home/ubuntu/"
+    source      = "../webapp.zip"
+    destination = "/home/ubuntu/webapp.zip"
   }
 
   # Provision MySQL, Node.js, and setup
@@ -82,7 +82,7 @@ build {
       "sudo mkdir /opt/csye6225/",
 
       # Unzip the application files
-      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/",
+      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/webapp",
 
       # Create the user and group
       "sudo groupadd csye6225",
