@@ -57,8 +57,8 @@ build {
 
   # Copy application artifacts to the instance
   provisioner "file" {
-    source      = "../webapp.zip"
-    destination = "/home/ubuntu/webapp.zip"
+    source      = "C:\\Users\\hardi\\Desktop\\webapp.zip"
+    destination = "/home/ubuntu/"
   }
 
   # Provision MySQL, Node.js, and setup
@@ -72,26 +72,17 @@ build {
 
       # Install required packages
       "sudo apt install -y nodejs",
-      "sudo apt install mysql-server -y",
       "sudo apt install unzip -y",
       "sudo apt install npm -y", # Install npm for testing
 
       "ls -l /home/ubuntu/webapp.zip",
       "sudo chmod 644 /home/ubuntu/webapp.zip",
 
-      # Change authentication method in MySQL
-      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${var.mysql_root_password}';\"",
-      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"CREATE USER 'git_user'@'%' IDENTIFIED BY '0308';\"",
-      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"GRANT ALL PRIVILEGES ON *.* TO 'git_user'@'%';\"",
-
-      # Create the database in the RDBMS
-      "sudo mysql -u root -p'${var.mysql_root_password}' -e \"CREATE DATABASE ${var.mysql_database};\"",
-
       # making csye6225
       "sudo mkdir /opt/csye6225/",
 
       # Unzip the application files
-      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/webapp",
+      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/",
 
       # Create the user and group
       "sudo groupadd csye6225",
@@ -99,6 +90,7 @@ build {
 
       # Change ownership of the application files
       "sudo chown -R csye6225:csye6225 /opt/csye6225/",
+
       # Ensure read/write/execute permissions for the owner
       "sudo chmod -R 755 /opt/csye6225/",
 
@@ -106,8 +98,8 @@ build {
       "cd /opt/csye6225/webapp && sudo npm install", # Install dependencies
 
       # Create systemd service
-      "sudo bash -c 'echo \"[Unit]\" > /etc/systemd/system/csye6225.service && echo \"Description=CSYE 6225 App\" >> /etc/systemd/system/csye6225.service && echo \"ConditionPathExists=/opt/application.properties\" >> /etc/systemd/system/csye6225.service && echo \"After=network.target\" >> /etc/systemd/system/csye6225.service && echo \"\" >> /etc/systemd/system/csye6225.service && echo \"[Service]\" >> /etc/systemd/system/csye6225.service && echo \"Type=simple\" >> /etc/systemd/system/csye6225.service && echo \"User=csye6225\" >> /etc/systemd/system/csye6225.service && echo \"Group=csye6225\" >> /etc/systemd/system/csye6225.service && echo \"WorkingDirectory=/opt/app\" >> /etc/systemd/system/csye6225.service && echo \"ExecStart=/opt/app/healthcheck\" >> /etc/systemd/system/csye6225.service && echo \"Restart=always\" >> /etc/systemd/system/csye6225.service && echo \"RestartSec=3\" >> /etc/systemd/system/csye6225.service && echo \"StandardOutput=syslog\" >> /etc/systemd/system/csye6225.service && echo \"StandardError=syslog\" >> /etc/systemd/system/csye6225.service && echo \"SyslogIdentifier=csye6225\" >> /etc/systemd/system/csye6225.service && echo \"\" >> /etc/systemd/system/csye6225.service && echo \"[Install]\" >> /etc/systemd/system/csye6225.service && echo \"WantedBy=multi-user.target\" >> /etc/systemd/system/csye6225.service'",
-
+      "echo '[Unit]\\nDescription=CSYE 6225 App\\nAfter=network.target\\n\\n[Service]\\nType=simple\\nUser=csye6225\\nGroup=csye6225\\nWorkingDirectory=/opt/csye6225/webapp\\nExecStart=/usr/bin/node /opt/csye6225/webapp/server.js\\nRestart=always\\nRestartSec=3\\nStandardOutput=syslog\\nStandardError=syslog\\nSyslogIdentifier=csye6225\\n\\n[Install]\\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/csye6225.service > /dev/null",
+      
       # Reload systemd to recognize the new service
       "sudo systemctl daemon-reload",
 
