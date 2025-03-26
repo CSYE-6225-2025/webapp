@@ -1,29 +1,42 @@
 const { testDbConnection } = require("../config/db");
-const HealthzCheck = require('../model/healthz');
-
-
+const HealthzCheck = require("../model/healthz");
+const logger = require("../logger");
 
 const healthCheck = async (_, res) => {
-    try {
-        const dbConnection = await testDbConnection();
-        if (dbConnection) {
+  const startTime = Date.now();
+  logger.info("GET /healthz - Health check initiated");
 
-            // Insert a record into the table
-            await HealthzCheck.create({
-                datetime: new Date().toISOString(), // Using current UTC timestamp
-            });
+  try {
+    // Test DB connection with timing
+    const dbConnStart = Date.now();
+    const dbConnection = await testDbConnection();
+    logger.info(`DB Connection Test Time: ${Date.now() - dbConnStart}ms`);
 
-            // If successful, return 200 OK
-            return res.status(200).send();
-        } else {
-            // If DB connection is unsuccessful, return 503 Service Unavailable
-            return res.status(503).send();
-        }
-    } catch (error) {
-        console.error("Error inserting health check record:", error);
-        // If there's an error inserting the record, return 503 Service Unavailable
-        return res.status(503).send();
+    if (!dbConnection) {
+      logger.error("Database connection test failed");
+      return res.status(503).send();
     }
+
+    // DB Insert with timing
+    const dbInsertStart = Date.now();
+    await HealthzCheck.create({
+      datetime: new Date().toISOString(),
+    });
+    logger.info(`DB Insert Time: ${Date.now() - dbInsertStart}ms`);
+
+    logger.info(
+      `GET /healthz - Health check completed successfully in ${
+        Date.now() - startTime
+      }ms`
+    );
+    return res.status(200).send();
+  } catch (error) {
+    logger.error(`Health check failed after ${Date.now() - startTime}ms`, {
+      error: error.message,
+      stack: error.stack,
+    });
+    return res.status(503).send();
+  }
 };
 
 module.exports = { healthCheck };

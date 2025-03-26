@@ -1,34 +1,58 @@
 const File = require("../model/fileModel");
 const S3Service = require("../services/s3Service");
+const logger = require("../logger");
 
 class FileController {
   // Upload a file
   static async uploadFile(req, res) {
+    const startTime = Date.now();
+    logger.info("POST /files - Upload request initiated");
+
     try {
       if (!req.file) {
+        logger.warn("No file uploaded - returning 400");
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const s3Response = await S3Service.uploadFile(req.file);
-
-      // Save file metadata to the database
-      const file = await File.create({
-        file_name: req.file.originalname,
-        url: s3Response.url, // S3 file URL
-        etag: s3Response.etag, // S3 ETag
-        content_type: s3Response.content_type, // File content type
-        content_length: s3Response.content_length, // File size in bytes
-        last_modified: s3Response.last_modified, // Last modified date from S3
-        s3_key: s3Response.s3_key, // S3 object key
+      logger.debug("File upload validation passed", {
+        fileName: req.file.originalname,
+        size: req.file.size,
       });
 
-      // Safely format the upload_date
+      // S3 Upload with timing
+      const s3Start = Date.now();
+      const s3Response = await S3Service.uploadFile(req.file);
+      logger.info(`S3 Upload Time: ${Date.now() - s3Start}ms`, {
+        fileKey: s3Response.s3_key,
+        size: req.file.size,
+      });
+
+      // DB Insert with timing
+      const dbStart = Date.now();
+      const file = await File.create({
+        file_name: req.file.originalname,
+        url: s3Response.url,
+        etag: s3Response.etag,
+        content_type: s3Response.content_type,
+        content_length: s3Response.content_length,
+        last_modified: s3Response.last_modified,
+        s3_key: s3Response.s3_key,
+      });
+      logger.info(`DB Insert Time: ${Date.now() - dbStart}ms`, {
+        fileId: file.id,
+      });
+
+      // Format response
       const uploadDate =
         file.upload_date instanceof Date
           ? file.upload_date.toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0];
 
-      // Return 201 Created response
+      logger.info(
+        `POST /files - Request completed successfully in ${
+          Date.now() - startTime
+        }ms`
+      );
       res.status(201).json({
         file_name: file.file_name,
         id: file.id,
@@ -36,22 +60,41 @@ class FileController {
         upload_date: uploadDate,
       });
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error uploading file", error: error.message });
+      logger.error(`Upload failed after ${Date.now() - startTime}ms`, {
+        error: error.message,
+        stack: error.stack,
+      });
+      res.status(500).json({
+        message: "Error uploading file",
+        error: error.message,
+      });
     }
   }
 
   // Get file metadata
   static async getFile(req, res) {
+    const startTime = Date.now();
+    const { id } = req.params;
+    logger.info(`GET /files/${id} - Fetch request initiated`);
+
     try {
-      const { id } = req.params;
+      // DB Query with timing
+      const dbStart = Date.now();
       const file = await File.findByPk(id);
+      logger.info(`DB Query Time: ${Date.now() - dbStart}ms`, {
+        fileId: id,
+      });
 
       if (!file) {
+        logger.warn(`File not found - ID: ${id}`);
         return res.status(404).json({ message: "File not found" });
       }
 
+      logger.info(
+        `GET /files/${id} - Request completed successfully in ${
+          Date.now() - startTime
+        }ms`
+      );
       res.status(200).json({
         file_name: file.file_name,
         id: file.id,
@@ -59,33 +102,67 @@ class FileController {
         upload_date: file.upload_date.toISOString().split("T")[0],
       });
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error retrieving file", error: error.message });
+      logger.error(`File fetch failed after ${Date.now() - startTime}ms`, {
+        fileId: id,
+        error: error.message,
+        stack: error.stack,
+      });
+      res.status(500).json({
+        message: "Error retrieving file",
+        error: error.message,
+      });
     }
   }
 
   // Delete a file
   static async deleteFile(req, res) {
+    const startTime = Date.now();
+    const { id } = req.params;
+    logger.info(`DELETE /files/${id} - Delete request initiated`);
+
     try {
-      const { id } = req.params;
+      // DB Query with timing
+      const dbQueryStart = Date.now();
       const file = await File.findByPk(id);
+      logger.info(`DB Query Time: ${Date.now() - dbQueryStart}ms`, {
+        fileId: id,
+      });
 
       if (!file) {
+        logger.warn(`File not found for deletion - ID: ${id}`);
         return res.status(404).json({ message: "File not found" });
       }
 
-      // Delete file from S3
+      // S3 Deletion with timing
+      const s3Start = Date.now();
       await S3Service.deleteFile(file.url);
+      logger.info(`S3 Deletion Time: ${Date.now() - s3Start}ms`, {
+        fileKey: file.s3_key,
+      });
 
-      // Delete file metadata from the database
+      // DB Deletion with timing
+      const dbDeleteStart = Date.now();
       await file.destroy();
+      logger.info(`DB Delete Time: ${Date.now() - dbDeleteStart}ms`, {
+        fileId: id,
+      });
 
-      res.status(204).send(); // No content for successful deletion
+      logger.info(
+        `DELETE /files/${id} - Request completed successfully in ${
+          Date.now() - startTime
+        }ms`
+      );
+      res.status(204).send();
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error deleting file", error: error.message });
+      logger.error(`File deletion failed after ${Date.now() - startTime}ms`, {
+        fileId: id,
+        error: error.message,
+        stack: error.stack,
+      });
+      res.status(500).json({
+        message: "Error deleting file",
+        error: error.message,
+      });
     }
   }
 }

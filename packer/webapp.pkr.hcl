@@ -57,8 +57,20 @@ build {
 
   # Copy application artifacts to the instance
   provisioner "file" {
-    source      = "../webapp.zip"
-    destination = "/home/ubuntu/webapp.zip"
+    source      = "C:\\Users\\hardi\\Desktop\\webapp.zip"
+    destination = "/home/ubuntu/"
+  }
+
+  # Copy the config file
+  provisioner "file" {
+    source      = "cloudwatch-agent-config.json"
+    destination = "/tmp/cloudwatch-agent-config.json"
+  }
+
+  # Copy the installation script
+  provisioner "file" {
+    source      = "install_cloudwatch_agent.sh"
+    destination = "/tmp/install_cloudwatch_agent.sh"
   }
 
   # Provision MySQL, Node.js, and setup
@@ -82,7 +94,7 @@ build {
       "sudo mkdir /opt/csye6225/",
 
       # Unzip the application files
-      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/webapp",
+      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/",
 
       # Create the user and group
       "sudo groupadd csye6225",
@@ -106,6 +118,14 @@ build {
       # Enable the service to start on boot
       "sudo systemctl enable csye6225.service"
 
+    ]
+  }
+
+  # Provision Cloud-watch agent
+  provisioner "shell" {
+    inline = [
+      "chmod +x /tmp/install_cloudwatch_agent.sh",
+      "sudo /tmp/install_cloudwatch_agent.sh"
     ]
   }
 }
