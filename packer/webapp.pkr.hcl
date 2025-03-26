@@ -55,10 +55,9 @@ build {
     "source.amazon-ebs.webapp_custom_image"
   ]
 
-  # Copy application artifacts to the instance
-  provisioner "file" {
-    source      = "C:\\Users\\hardi\\Desktop\\webapp.zip"
-    destination = "/home/ubuntu/"
+provisioner "file" {
+    source      = "../webapp.zip"
+    destination = "/home/ubuntu/webapp.zip"
   }
 
   # Copy the config file
@@ -94,7 +93,7 @@ build {
       "sudo mkdir /opt/csye6225/",
 
       # Unzip the application files
-      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/",
+      "sudo unzip /home/ubuntu/webapp.zip -d /opt/csye6225/webapp",
 
       # Create the user and group
       "sudo groupadd csye6225",
