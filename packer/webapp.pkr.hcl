@@ -55,10 +55,21 @@ build {
     "source.amazon-ebs.webapp_custom_image"
   ]
 
-  # Copy application artifacts to the instance
   provisioner "file" {
     source      = "../webapp.zip"
     destination = "/home/ubuntu/webapp.zip"
+  }
+
+  # Copy the config file
+  provisioner "file" {
+    source      = "cloudwatch-agent-config.json"
+    destination = "/tmp/cloudwatch-agent-config.json"
+  }
+
+  # Copy the installation script
+  provisioner "file" {
+    source      = "install_cloudwatch_agent.sh"
+    destination = "/tmp/install_cloudwatch_agent.sh"
   }
 
   # Provision MySQL, Node.js, and setup
@@ -106,6 +117,14 @@ build {
       # Enable the service to start on boot
       "sudo systemctl enable csye6225.service"
 
+    ]
+  }
+
+  # Provision Cloud-watch agent
+  provisioner "shell" {
+    inline = [
+      "chmod +x /tmp/install_cloudwatch_agent.sh",
+      "sudo /tmp/install_cloudwatch_agent.sh"
     ]
   }
 }

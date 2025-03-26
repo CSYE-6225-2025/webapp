@@ -1,5 +1,6 @@
 const { Sequelize } = require("sequelize");
 require("dotenv").config({ path: process.env.NODE_ENV === "test" ? ".env.test.local" : ".env" });
+const logger = require("../logger");
 
 const MYSQL_DB = process.env.MYSQL_DB;
 const MYSQL_USER = process.env.MYSQL_USER;

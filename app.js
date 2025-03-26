@@ -3,6 +3,10 @@ const app = express();
 const { sequelize } = require("./config/db"); // Sequelize instance
 const healthz = require("./routes/healthz");
 const fileRoutes = require("./routes/fileRoutes");
+const { middleware: metricsMiddleware } = require("./metrics");
+
+// Initialize metrics collection
+app.use(metricsMiddleware);
 
 sequelize.sync();
 
@@ -15,12 +19,18 @@ app.use("/v1", fileRoutes); // File-related routes
 
 // Error handling for undefined routes
 app.use("*", (_, res) => {
+  logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).send();
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error("Unhandled error occurred", {
+    error: err.message,
+    stack: err.stack,
+    route: req.originalUrl,
+    method: req.method,
+  });
   res.status(500).json({ message: "Internal Server Error" });
 });
 
