@@ -55,7 +55,7 @@ build {
     "source.amazon-ebs.webapp_custom_image"
   ]
 
-provisioner "file" {
+  provisioner "file" {
     source      = "../webapp.zip"
     destination = "/home/ubuntu/webapp.zip"
   }
