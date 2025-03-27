@@ -4,7 +4,7 @@ const { sequelize } = require("./config/db"); // Sequelize instance
 const healthz = require("./routes/healthz");
 const fileRoutes = require("./routes/fileRoutes");
 const { middleware: metricsMiddleware } = require("./metrics");
-
+const logger = require("./logger");
 // Initialize metrics collection
 app.use(metricsMiddleware);
 
