@@ -25,6 +25,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      # Existing Test Steps
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -33,30 +34,24 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Create .env file from GitHub Secrets
+      - name: Create .env files
         run: |
-          echo "PORT=${{ secrets.PORT }}" >> .env.test.local
-          echo "MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env.test.local
-          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.test.local
-          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.test.local
-          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.test.local
-          echo "MYSQL_PORT=${{ secrets.PORT }}" >> .env.test.local
-        
-      - name: Create .env file from GitHub Secrets
-        run: |
-          echo "PORT=${{ secrets.PORT }}" >> .env
-          echo "MYSQL_DB=${{ secrets.MYSQL_DATABASE }}" >> .env
-          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
-          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
-          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
-          echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env
-
-
-      - name: Debug .env file
-        run: cat .env.test.local
-            
-      - name: Debug .env file
-        run: cat .env
+          cat > .env.test.local << EOF
+          PORT=${{ secrets.PORT }}
+          MYSQL_DB=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+          MYSQL_PORT=${{ secrets.PORT }}
+          EOF
+          cat > .env << EOF
+          PORT=${{ secrets.PORT }}
+          MYSQL_DB=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+          MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+          EOF
 
       - name: Wait for MySQL to be ready
         run: |
@@ -65,25 +60,19 @@ jobs:
             sleep 2
           done
 
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
 
+      # Build Application Artifact
       - name: Make zip
         run: zip -r webapp.zip .
 
-      - name: list file after creating zip
-        run: ls -1h
-
-      # Step 2: Set up AWS CLI
-      - name: Set up AWS CLI
+      # Setup AWS CLI for DEV account
+      - name: Configure AWS CLI for DEV account
         run: |
-          aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
-          aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          aws configure set region us-east-1
-
-      - name: Validate AWS Credentials
-        run: |
-          aws sts get-caller-identity
+          aws configure set aws_access_key_id "${{ secrets.AWS_DEV_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.AWS_DEV_SECRET_ACCESS_KEY }}"
+          aws configure set region ${{ secrets.AWS_REGION }}
 
       # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Change directory & Initialize packer to create EC2 instance
@@ -91,21 +80,81 @@ jobs:
           cd packer
           packer init webapp.pkr.hcl
 
-      - name: Validate Packer
+      # Validate Packer Template and Build AMI
+      - name: Validate Packer Template
         run: |
           cd packer
           packer validate webapp.pkr.hcl
 
-      # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
-      - name: Run Packer to create EC2 instance
+      - name: Build AMI with Packer
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           cd packer
           packer build \
-          -var "aws_region=${{secrets.AWS_REGION}}" \
-          -var "mysql_root_password=${{secrets.MYSQL_ROOT_PASSWORD}}" \
-          -var "mysql_database=${{secrets.MYSQL_DATABASE}}" \
-          webapp.pkr.hcl
+            -var "aws_region=${{secrets.AWS_REGION}}" \
+            -var "mysql_root_password=${{secrets.MYSQL_ROOT_PASSWORD}}" \
+            -var "mysql_database=${{secrets.MYSQL_DATABASE}}" \
+            webapp.pkr.hcl
+
+      # Get the latest AMI ID (assuming it's output by Packer)
+      - name: Get AMI ID
+        id: ami
+        run: |
+          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=tag:Application,Values=webapp" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_OUTPUT
+
+      # Share AMI with DEMO account
+      - name: Share AMI with DEMO account
+        run: |
+          aws ec2 modify-image-attribute \
+            --image-id ${{ steps.ami.outputs.AMI_ID }} \
+            --attribute launchPermission \
+            --launch-permission "Add=[{UserId=${{ secrets.DEMO_AWS_ACCOUNT_ID }}}]"
+
+      # Reconfigure AWS CLI for DEMO account
+      - name: Configure AWS CLI for DEMO account
+        run: |
+          aws configure set aws_access_key_id "${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.AWS_DEMO_SECRET_ACCESS_KEY }}"
+          aws configure set region ${{ secrets.AWS_REGION }}
+
+      # Create new Launch Template version
+      - name: Create Launch Template Version
+        id: template
+        run: |
+          VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+            --source-version '$Latest' \
+            --launch-template-data "{\"ImageId\":\"${{ steps.ami.outputs.AMI_ID }}\"}" \
+            --query 'LaunchTemplateVersion.VersionNumber' \
+            --output text)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      # Trigger Instance Refresh
+      - name: Start Instance Refresh
+        id: refresh
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name ${{ secrets.AUTOSCALING_GROUP_NAME }} \
+            --query 'InstanceRefreshId' \
+            --output text)
+          echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_OUTPUT
+
+      # Wait for Instance Refresh to complete
+      - name: Wait for Instance Refresh
+        run: |
+          while true; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name ${{ secrets.AUTOSCALING_GROUP_NAME }} \
+              --instance-refresh-ids ${{ steps.refresh.outputs.REFRESH_ID }} \
+              --query 'InstanceRefreshes[0].Status' \
+              --output text)
+            echo "Instance Refresh Status: $STATUS"
+            if [ "$STATUS" = "Successful" ]; then
+              exit 0
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelling" ] || [ "$STATUS" = "Cancelled" ]; then
+              exit 1
+            fi
+            sleep 10
+          done
