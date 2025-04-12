@@ -104,12 +104,13 @@ jobs:
       - name: Get AMI ID
         id: ami
         run: |
-          AMI_ID=$( aws ec2 describe-images \                                                                                                                              
-          --filters "Name=name,Values=custom-aws-webapp-*" "Name=is-public,Values=false" \
-          --query "sort_by(Images, &CreationDate)[-1].ImageId" \
-          --output text)
+          AMI_ID=$(aws ec2 describe-images \
+            --filters "Name=name,Values=custom-aws-webapp-*" "Name=is-public,Values=false" \
+            --query "sort_by(Images, &CreationDate)[-1].ImageId" \
+            --output text)
           echo "Latest AMI: $AMI_ID"
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          echo "ami_id=$AMI_ID" >> $GITHUB_ENV
+
 
         # Reconfigure AWS CLI for DEMO account
       - name: Configure AWS CLI for DEMO account
