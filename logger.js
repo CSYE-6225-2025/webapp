@@ -34,7 +34,7 @@ const fileFormat = printf(({ level, message, timestamp, stack }) => {
 
 // Create logger instance
 const logger = createLogger({
-  level: process.env.LOG_LEVEL || "info",
+  level: process.env.LOG_LEVEL || "silly",
   format: combine(
     timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     format.errors({ stack: true })
