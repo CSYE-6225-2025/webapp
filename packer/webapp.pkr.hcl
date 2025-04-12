@@ -36,7 +36,6 @@ variable "ami_users" {
 
 source "amazon-ebs" "webapp_custom_image" {
   region        = var.aws_region
-  profile       = "webapp_ec2"
   ami_name      = "custom-aws-webapp-{{timestamp}}"
   instance_type = "t2.micro"
   source_ami    = "ami-04b4f1a9cf54c11d0"
