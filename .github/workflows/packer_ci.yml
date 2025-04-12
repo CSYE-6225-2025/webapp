@@ -109,10 +109,10 @@ jobs:
                   --filters "Name=name,Values=custom-aws-webapp-*" "Name=is-public,Values=false" \
                   --query "sort_by(Images, &CreationDate)[-1].ImageId" \
                   --output text)
-          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+          echo "Latest AMI: $AMI_ID"
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
 
-
-      # Reconfigure AWS CLI for DEMO account
+        # Reconfigure AWS CLI for DEMO account
       - name: Configure AWS CLI for DEMO account
         run: |
           aws configure set aws_access_key_id "${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}"
@@ -123,23 +123,22 @@ jobs:
       - name: Create Launch Template Version
         id: template
         run: |
-            VERSION=$(aws ec2 create-launch-template-version \
-              --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
-              --source-version '$Latest' \
-              --launch-template-data '{"ImageId":"${{ steps.ami.outputs.ami_id }}"}' \
-              --query 'LaunchTemplateVersion.VersionNumber' \
-              --output text)
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+            --source-version '$Latest' \
+            --launch-template-data '{"ImageId":"${{ env.AMI_ID }}"}' \
+            --query 'LaunchTemplateVersion.VersionNumber' \
+            --output text)
+          echo "Created new version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      # Trigger Instance Refresh
-        # Step 8: update asg
+      # Step 8: update asg
       - name: Update ASG to use latest launch template version
         run: |
           aws autoscaling update-auto-scaling-group \
             --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
             --launch-template "LaunchTemplateName=${{ secrets.LAUNCH_TEMPLATE }},Version=\$Latest"
-          echo "ASG updated to use launch template version ${{ steps.template.outputs.version }}"
-
+          echo "ASG updated to use launch template version ${{ env.VERSION }}"
 
       - name: Start instance refresh
         id: start_refresh
@@ -148,8 +147,7 @@ jobs:
             --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
             --query "InstanceRefreshId" --output text)
           echo "Started instance refresh with ID: $REFRESH_ID"
-          echo "refresh_id=$REFRESH_ID" >> $GITHUB_OUTPUT
-
+          echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_ENV
 
       - name: Wait for instance refresh to complete
         run: |
@@ -157,7 +155,7 @@ jobs:
           while true; do
             STATUS=$(aws autoscaling describe-instance-refreshes \
               --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
-              --instance-refresh-ids "${{ steps.start_refresh.outputs.refresh_id }}" \
+              --instance-refresh-ids "${{ env.REFRESH_ID }}" \
               --query 'InstanceRefreshes[0].Status' --output text)
             echo "Refresh status: $STATUS"
             if [[ "$STATUS" == "Successful" ]]; then
@@ -169,21 +167,3 @@ jobs:
             fi
             sleep 30
           done
-
-              run: |
-                echo "Waiting for instance refresh to complete..."
-                while true; do
-                  STATUS=$(aws autoscaling describe-instance-refreshes \
-                    --auto-scaling-group-name "${{secrets.AUTOSCALING_GROUP_NAME}}" \
-                    --instance-refresh-ids "$REFRESH_ID" \
-                    --query 'InstanceRefreshes[0].Status' --output text)
-                  echo "Refresh status: $STATUS"
-                  if [[ "$STATUS" == "Successful" ]]; then
-                    echo "Instance refresh succeeded."
-                    exit 0
-                  elif [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" ]]; then
-                    echo "Instance refresh failed or cancelled."
-                    exit 1
-                  fi
-                  sleep 30
-                done
