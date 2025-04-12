@@ -104,7 +104,11 @@ jobs:
       - name: Get AMI ID
         id: ami
         run: |
-          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=tag:Application,Values=webapp" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+          AMI_ID=$(aws ec2 describe-images \
+                        --executable-users self \
+                        --filters "Name=name,Values=custom-aws-webapp-*" "Name=is-public,Values=false" \
+                        --query "sort_by(Images, &CreationDate)[-1].ImageId" \
+                        --output text)
           echo "AMI_ID=$AMI_ID" >> $GITHUB_OUTPUT
 
       # Share AMI with DEMO account
