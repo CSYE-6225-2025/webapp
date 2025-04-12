@@ -70,10 +70,13 @@ jobs:
       # Setup AWS CLI for DEV account
       - name: Configure AWS CLI for DEV account
         run: |
-          aws configure set aws_access_key_id "${{ secrets.AWS_DEV_ACCESS_KEY_ID }}"
-          aws configure set aws_secret_access_key "${{ secrets.AWS_DEV_SECRET_ACCESS_KEY }}"
-          aws configure set region ${{ secrets.AWS_REGION }}
-
+          aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          aws configure set region us-east-1
+      
+      - name: Validate AWS Credentials
+        run: |
+          aws sts get-caller-identity
       # Step 4: Run Packer to create EC2 instance (Make sure Packer is installed and configured)
       - name: Change directory & Initialize packer to create EC2 instance
         run: |
