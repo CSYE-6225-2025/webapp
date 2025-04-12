@@ -137,7 +137,7 @@ jobs:
         run: |
           aws autoscaling update-auto-scaling-group \
             --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
-            --launch-template "LaunchTemplateName=${{ secrets.LAUNCH_TEMPLATE }},Version=\$Latest"
+            --launch-template "LaunchTemplateName=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=\$Latest"
           echo "ASG updated to use launch template version ${{ env.VERSION }}"
 
       - name: Start instance refresh
