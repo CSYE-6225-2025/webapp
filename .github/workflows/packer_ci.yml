@@ -126,7 +126,7 @@ jobs:
             VERSION=$(aws ec2 create-launch-template-version \
               --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
               --source-version '$Latest' \
-              --launch-template-data "{\"ImageId\":\"${{ steps.ami.outputs.ami_id }}\"}" \
+              --launch-template-data '{"ImageId":"${{ steps.ami.outputs.ami_id }}"}' \
               --query 'LaunchTemplateVersion.VersionNumber' \
               --output text)
             echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -137,7 +137,7 @@ jobs:
         run: |
           aws autoscaling update-auto-scaling-group \
             --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
-            --launch-template "LaunchTemplateName=${{ secrets.LAUNCH_TEMPLATE }},Version=${{ steps.template.outputs.version }}"
+            --launch-template "LaunchTemplateName=${{ secrets.LAUNCH_TEMPLATE }},Version=\$Latest"
           echo "ASG updated to use launch template version ${{ steps.template.outputs.version }}"
 
 
