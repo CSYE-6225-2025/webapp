@@ -73,7 +73,7 @@ jobs:
           aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
           aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           aws configure set region us-east-1
-      
+
       - name: Validate AWS Credentials
         run: |
           aws sts get-caller-identity
@@ -105,11 +105,12 @@ jobs:
         id: ami
         run: |
           AMI_ID=$(aws ec2 describe-images \
-                        --executable-users self \
-                        --filters "Name=name,Values=custom-aws-webapp-*" "Name=is-public,Values=false" \
-                        --query "sort_by(Images, &CreationDate)[-1].ImageId" \
-                        --output text)
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_OUTPUT
+                  --executable-users self \
+                  --filters "Name=name,Values=custom-aws-webapp-*" "Name=is-public,Values=false" \
+                  --query "sort_by(Images, &CreationDate)[-1].ImageId" \
+                  --output text)
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+
 
       # Reconfigure AWS CLI for DEMO account
       - name: Configure AWS CLI for DEMO account
@@ -122,38 +123,41 @@ jobs:
       - name: Create Launch Template Version
         id: template
         run: |
-          VERSION=$(aws ec2 create-launch-template-version \
-            --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
-            --source-version '$Latest' \
-            --launch-template-data "{\"ImageId\":\"$AMI_ID\"}" \
-            --query 'LaunchTemplateVersion.VersionNumber' \
-            --output text)
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            VERSION=$(aws ec2 create-launch-template-version \
+              --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+              --source-version '$Latest' \
+              --launch-template-data "{\"ImageId\":\"${{ steps.ami.outputs.ami_id }}\"}" \
+              --query 'LaunchTemplateVersion.VersionNumber' \
+              --output text)
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       # Trigger Instance Refresh
         # Step 8: update asg
       - name: Update ASG to use latest launch template version
         run: |
           aws autoscaling update-auto-scaling-group \
-            --auto-scaling-group-name "${{secrets.AUTOSCALING_GROUP_NAME}}" \
-            --launch-template "LaunchTemplateName=${{secrets.LAUNCH_TEMPLATE}},Version=$VERSION"
-          echo "ASG updated to use launch template version $VERSION"
+            --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
+            --launch-template "LaunchTemplateName=${{ secrets.LAUNCH_TEMPLATE }},Version=${{ steps.template.outputs.version }}"
+          echo "ASG updated to use launch template version ${{ steps.template.outputs.version }}"
+
 
       - name: Start instance refresh
         id: start_refresh
         run: |
           REFRESH_ID=$(aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name "${{secrets.AUTOSCALING_GROUP_NAME}}" \
+            --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
             --query "InstanceRefreshId" --output text)
           echo "Started instance refresh with ID: $REFRESH_ID"
+          echo "refresh_id=$REFRESH_ID" >> $GITHUB_OUTPUT
+
 
       - name: Wait for instance refresh to complete
         run: |
           echo "Waiting for instance refresh to complete..."
           while true; do
             STATUS=$(aws autoscaling describe-instance-refreshes \
-              --auto-scaling-group-name "${{secrets.AUTOSCALING_GROUP_NAME}}" \
-              --instance-refresh-ids "$REFRESH_ID" \
+              --auto-scaling-group-name "${{ secrets.AUTOSCALING_GROUP_NAME }}" \
+              --instance-refresh-ids "${{ steps.start_refresh.outputs.refresh_id }}" \
               --query 'InstanceRefreshes[0].Status' --output text)
             echo "Refresh status: $STATUS"
             if [[ "$STATUS" == "Successful" ]]; then
@@ -165,3 +169,21 @@ jobs:
             fi
             sleep 30
           done
+
+              run: |
+                echo "Waiting for instance refresh to complete..."
+                while true; do
+                  STATUS=$(aws autoscaling describe-instance-refreshes \
+                    --auto-scaling-group-name "${{secrets.AUTOSCALING_GROUP_NAME}}" \
+                    --instance-refresh-ids "$REFRESH_ID" \
+                    --query 'InstanceRefreshes[0].Status' --output text)
+                  echo "Refresh status: $STATUS"
+                  if [[ "$STATUS" == "Successful" ]]; then
+                    echo "Instance refresh succeeded."
+                    exit 0
+                  elif [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" ]]; then
+                    echo "Instance refresh failed or cancelled."
+                    exit 1
+                  fi
+                  sleep 30
+                done
