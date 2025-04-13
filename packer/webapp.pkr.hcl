@@ -85,6 +85,14 @@ build {
       "sudo apt install unzip -y",
       "sudo apt install npm -y", # Install npm for testing
 
+      "if ! command -v aws &> /dev/null; then",
+      "  curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\"",
+      "  unzip awscliv2.zip",
+      "  sudo ./aws/install",
+      "  rm -rf awscliv2.zip aws",
+      "fi",
+      "aws --version",
+
       "ls -l /home/ubuntu/webapp.zip",
       "sudo chmod 644 /home/ubuntu/webapp.zip",
 
