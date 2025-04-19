@@ -15,6 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use("/healthz", healthz);
+app.use("/cicd",healthz);
 app.use("/v1", fileRoutes); // File-related routes
 
 // Error handling for undefined routes
