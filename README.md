@@ -1,58 +1,48 @@
-# webapp
+###Project Overview
+This project is a comprehensive demonstration of cloud application development and deployment, emphasizing robust security and high availability:
 
-testing the webapp github flow,
-Hello, friends....testing take hello again.....179
-# Assignment 2: AWS Organization Setup
+##RESTful Application Development & Enhanced CI:
 
-In this assignment,Set up AWS Organizations with **dev** and **demo** accounts, configure IAM with a `csye6225-ta` group for TAs, and automate Ubuntu 24.04 app setup via a shell script. Implement API tests with REST Assured or similar, storing them in a separate repository folder.
+Developed a scalable RESTful application, with Continuous Integration via GitHub Actions ensuring code reliability and quality.
+Integrated detailed logging and metrics for effective monitoring and performance analysis.
+Application Scaling and Event-Driven Architecture:
 
-## Features
+Implemented AutoScaling for dynamic capacity management.
+Used Amazon SNS for an efficient, event-driven architecture.
+AMI Creation and Userdata Scripting:
 
-#### AWS Organizations Setup 
-– Create dev and demo member accounts for development and grading
+Customized Amazon Machine Images (AMI) for a consistent deployment environment.
+Leveraged userdata scripts for automated instance configuration.
+Robust Infrastructure Deployment with Security:
 
-#### IAM Configuration
-– Set up a csye6225-ta group with ReadOnlyAccess for teaching assistants in the DEMO AWS account.
+Deployed a secure AWS infrastructure, with a focus on network and resource isolation.
+Utilized IAM roles and security groups to enforce strict access controls and security best practices.
+Configured the Application Load Balancer to only accept HTTPS requests, enhancing data security in transit, with SSL/TLS certificates managed through AWS Certificate Manager (ACM).
+Employed Route 53 for reliable domain registration and DNS management.
+Lambda Functions for Automated Operations:
 
-#### Automated System Setup
-– Write a shell script for Ubuntu 24.04 LTS to update packages, install an RDBMS, create a database, set up user permissions, and deploy the application in /opt/csye6225.
+Integrated AWS Lambda for automated responses to specific events, streamlining operations and increasing efficiency.
+💻 List of Cloud services used:
+🌍 Route 53 (DNS service)
+🌐 VPC (Virtual private cloud)
+⚖️ Application Load Balancer (ALB)
+🔏 Certificate Manager (Security In transit)
+⚖️ Auto Scaling group (Scale on demand)
+💻 EC2 (Virtual Server)(Debian OS)
+🗄️ RDS (Relational database service)
+☁️ GCS (Google Cloud Storage)
+🔍 CloudWatch (Logs and metrics)
+CI/CD
 
-#### Secure Access Control
-– Only the root user can modify resources; TAs get restricted read-only access.
 
-#### API Testing Framework
-– Implement automated API tests using REST Assured or a similar framework, validating success and failure scenarios.
+📘 Key Takeaways
+Gained comprehensive knowledge in deploying and managing cloud-based applications using AWS services
+Learned to leverage Pulumi for infrastructure orchestration, appreciating the power of using a high-level language like Python for infrastructure management
+Gained practical experience in implementing security measures like IAM roles, security groups, and SSL/TLS with ACM, ensuring secure and reliable application environments
+Gained experience in using Route 53 for domain registration and DNS management, understanding its role in a cloud environment
+🛠️ Code
+For more specific implementation details, visit the repos :
 
-#### Organized Codebase
-– Store API tests separately in the web app repository for maintainability.
-
-# Assignment 1: Building a Basic API with Node.js, Express, Sequelize, and MySQL
-In this assignment, the goal is to create a simple API to test the connection to a local database and enter a record. The project utilizes Node.js, Express, Sequelize, and MySQL to showcase the required functionality.
-
-## Features
-Healthz Endpoint
-The API includes a healthz endpoint designed to perform a database connection test and enter a entry record.
-
-To start database server use MYsql desktop app 
-
-To verify the connection status, you can use the following curl request:
-curl -vvvv http://localhost:8080/healthz
-This request returns either "OK" or "Service Unavailable" based on the connection status and record entry.
-Middleware Blocking Other HTTP Methods
-The healthz endpoint has been secured by middleware to allow only specific HTTP methods.
-
-To test this middleware, you can use the following curl requests:
-
-### POST request:
-curl -vvvv -X PUT http://localhost:8080/healthz
-
-### DELETE request:
-curl -vvvv -X DELETE http://localhost:8080/healthz
-
-### PATCH request:
-curl -vvvv -X PATCH http://localhost:8080/healthz
-
-###### About
-The repository contains a rest-api which will be used to learn all different concepts about cloud computing and network structures
-
-test
+Application and REST APIs : https://github.com/csye6225-swetha/webapp
+Infrastructure : https://github.com/csye6225-swetha/iac-pulumi
+Lambda Function : https://github.com/csye6225-swetha/serverless
